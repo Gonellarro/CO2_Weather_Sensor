@@ -5,7 +5,7 @@ The aim of this project is to build a CO2 and weather station who grab meassures
 
 In the way to achieve the full project we dispose:
 
-1. One VM (Core i3 7300 + 2GB of RAM, 50GB of SSD) with Ubuntu Server 20.10
+1. One VM (Core i3 7100u + 2GB of RAM, 50GB of SSD) with Ubuntu Server 20.10
 2. Installation of docker as part of the installation of the OS (via snap)
 3. Registration of a public domain from duckdns.org
 4. Deployment of the following docker-compose instances:
