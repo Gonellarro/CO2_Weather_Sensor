@@ -1,7 +1,7 @@
 # CO2_Wheather_Sensor
 Building a CO2 and wheather station with Wemos D1 mini micro controller, MH Z19B and BM280 sensors
 
-The aim of this project is to build a CO2 and weather station who grab meassures, send them through MQTT protocol to a MQTT server, and display them by means of a grafana dashboard. To reach this objective we have planned to build a device with Wemos D1 mini microcontroller attached with MHZ19B CO2 sensor and BME280 temperature, preassure and humidity meassures. 
+The aim of this project is to build a CO2 and weather station who grab meassures, send them through MQTT protocol to a MQTT server, and display them by means of a grafana dashboard. To reach this objective we have planned to build a device with Wemos D1 mini microcontroller attached to a MHZ19B CO2 sensor and BME280 temperature, preassure and humidity meassures. 
 
 In the way to achieve the full project we dispose:
 
