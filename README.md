@@ -1,5 +1,5 @@
-# CO2 Wheather Sensor
-Building a CO2 and wheather station with Wemos D1 mini micro controller, MH Z19B and BM280 sensors
+# CO2 Weather Sensor
+Building a CO2 and weather station with Wemos D1 mini micro controller, MH Z19B and BM280 sensors
 
 The purpose of this project is to help teachers know when to ventilate the classroom because it is reaching dangerous CO2 levels. By creating this device, teachers will have a reliable tool for measuring the CO2 level of their classes, cheap and easy to build. 
 Using simple signals (traffic lights) anyone can know the state of the air, if it is correct, worrying or dangerous. 
