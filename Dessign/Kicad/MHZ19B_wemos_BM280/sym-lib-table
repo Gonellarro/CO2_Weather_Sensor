@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name MHZ19B_wemos_BM280-rescue)(type Legacy)(uri ${KIPRJMOD}/MHZ19B_wemos_BM280-rescue.lib)(options "")(descr ""))
+  (lib (name gybmep)(type Legacy)(uri C:/Users/mvich/OneDrive/Documentos/Arduino/Diagrames/GYBMEP/gybmep.lib)(options "")(descr ""))
+)

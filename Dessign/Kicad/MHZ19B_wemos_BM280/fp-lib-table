@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name GY-BME280)(type KiCad)(uri C:/Users/mvich/OneDrive/Documentos/Arduino/libraries/GY-BME280.pretty)(options "")(descr ""))
+)
