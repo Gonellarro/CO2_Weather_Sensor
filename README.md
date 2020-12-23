@@ -20,6 +20,7 @@ First, the basis; the device itself:
 - 1 x MZ H19B CO2 sensor
 - 1 x BME280 weather sensor
 - 3 x LED
+- 3 x 220 ohm resistor
 - 1 x PCB
 
 Second, the extrapower; the uses of a dashboard to monitorize it:
