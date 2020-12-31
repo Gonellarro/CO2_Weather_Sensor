@@ -18,25 +18,24 @@ We divide the project into several parts: on the one hand there is the hardware 
 First, the basis; the device itself:
 
 - 1 x Wemos D1 mini
+
   ![Wemos D1 mini](imgs/wemos_d1_mini.jpg)
 
 - 1 x MZ H19B CO2 sensor
+
   ![mhz19b](imgs/mhz19b.jpg)
 
 - 1 x BME280 weather sensor
+
   ![BME280](imgs/BME280.jpg)
 
-  
-
 - 3 x LED (Red, Orange, Green)
+
   ![Leds](imgs/leds.jpg)
 
-  
-
 - 3 x 220 ohm resistor
-  ![Resistor](imgs/resistor.jpg)
 
-  
+  ![Resistor](imgs/resistor.jpg)
 
 - 1 x PCB
   
