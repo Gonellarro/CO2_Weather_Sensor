@@ -76,7 +76,7 @@ We can observe here ther results if we open serial monitor from the Arduino IDE
 
 ### Part 2. The code
 
-You can find the code here into Arduino folder. You can use different tastes, Wifi o Wifi + MQTT. If you're not going to use monitoring or only want to test the device, I recommend you tou use Wifi only. In case you want to implement extra-power solution, Wifi + MQTT is your choice.
+You can find the code here into Arduino folder. You can use different tastes, Wifi or Wifi + MQTT. If you're not going to use monitoring or only want to test the device, I recommend you tou use Wifi only. In case you want to implement extra-power solution, Wifi + MQTT is your choice.
 
 In the Wifi only part, we have several files:
 
@@ -86,7 +86,7 @@ In the Wifi only part, we have several files:
   - ORANGE: from 600 to 799 ppm
   - RED: above 800 ppm
 
-  Feel free to use this values as you wish, having in mind OMS recommendations.
+  Feel free to change this values as you wish, having in mind OMS recommendations.
 
 - **Config.h:** This file controls two delay times:
 
@@ -95,5 +95,5 @@ In the Wifi only part, we have several files:
 
 - **Wifi_credentials.h:** Here you can insert your Wifi credentials. If you don't have ones, doesn't matter, the device will not send information
 
-(To be continued)
+(To be continued...)
 
