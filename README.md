@@ -61,7 +61,7 @@ This part allows you to build a complete functional CO2 sensor, that can run int
 
 Here we have the diagram of the device
 
-![Fritzing low](imgs\fritzing_low.jpg)
+![Fritzing low](imgs/fritzing_low.jpg)
 
 
 
@@ -96,5 +96,5 @@ In the Wifi only part, we have several files:
 
 - **Wifi_credentials.h:** Here you can insert your Wifi credentials. If you don't have ones, doesn't matter, the device will not send information
 
-- 
+(To be continued)
 
