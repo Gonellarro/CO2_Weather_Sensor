@@ -95,5 +95,7 @@ In the Wifi only part, we have several files:
 
 - **Wifi_credentials.h:** Here you can insert your Wifi credentials. If you don't have ones, doesn't matter, the device will not send information
 
-(To be continued...)
+### Part 3. The dashboard
+
+If you need only a sensor that warn you when CO2 has lifted over the ppm threshold, you can finish here. The sensor is fully functional and let you be aware of the quality of the air. Eventhough you want more accurate meassurings or even an historical as a part of the monitoring system, this part is the dashboard one.
 
