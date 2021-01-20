@@ -54,8 +54,7 @@ El dispositivo básico registrará los datos de CO2, temperatura y humedad de lo
 ### Diagrama esquemático
 
 Esquema
-
-Fritzing
+![Fritzing](imgs/fritzing_low.jpg)
 
 ### Construir el circuito
 
