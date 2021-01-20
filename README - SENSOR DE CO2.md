@@ -77,7 +77,7 @@ http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 a las preferencias del IDE/Gestión de URLs adicionales de tarjetas:
 
-![Code01](imgs\Code01.jpg)
+![Code01](imgs/Code01.jpg)
 
 Podemos ver que lo hemos importado bien si encontramos la placa LOLIN(WEMOS) D1 R2 & mini en el menu Herramientas\Gestor de tarjetas\ESP8266 Boards (2.7.4) 
 
