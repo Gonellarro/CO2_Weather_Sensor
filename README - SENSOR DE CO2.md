@@ -81,7 +81,7 @@ a las preferencias del IDE/Gestión de URLs adicionales de tarjetas:
 
 Podemos ver que lo hemos importado bien si encontramos la placa LOLIN(WEMOS) D1 R2 & mini en el menu Herramientas\Gestor de tarjetas\ESP8266 Boards (2.7.4) 
 
-![image-20210120190310374](imgs\wemos_02.jpg)
+![Wemos02](imgs/wemos_02.jpg)
 
 
 
@@ -89,19 +89,19 @@ Podemos ver que lo hemos importado bien si encontramos la placa LOLIN(WEMOS) D1 
 
 Debemos bajarnos el ZIP de la librería que está en https://github.com/strange-v/MHZ19 e importarlo como librería. 
 
-![libraryMHZ19B_01](imgs\libraryMHZ19B_01.jpg)
+![libraryMHZ19B_01](imgs/libraryMHZ19B_01.jpg)
 
 
 
 Vamos al menú Programa\Incluir Librería\Añadir biblioteca .ZIP
 
-![libraryMHZ19B_02](imgs\libraryMHZ19B_02.jpg)
+![libraryMHZ19B_02](imgs/libraryMHZ19B_02.jpg)
 
 
 
 Podemos comprobar que está bien si encontramos la librería en el menú Programa\Incluir Librería\MHZ19
 
-![image-20210120191643404](imgs\libraryMHZ19B_03.jpg)
+![libraryMHZ19B_03](imgs/libraryMHZ19B_03.jpg)
 
 
 
@@ -109,11 +109,11 @@ Podemos comprobar que está bien si encontramos la librería en el menú Program
 
 En este caso es más sencillo, ya que tenemos que añadir solo las librerías de Adafruit y que ya están listadas por defecto. Vamos al menú Programa\Incluir Librería\Administrar bibliotecas y buscamos por BME. Elegimos la librería de Adafruit
 
-![libraryBME280](imgs\libraryBME280.jpg)
+![libraryBME280](imgs/libraryBME280.jpg)
 
 
 
 Igualmente comprobaremos que lo hemos cargado correctamente si aparece dentro de las librerías disponibles.
 
-![image-20210120192342501](imgs\libraryBME280_02.jpg)
+![libraryBME280_02](imgs/libraryBME280_02.jpg)
 
