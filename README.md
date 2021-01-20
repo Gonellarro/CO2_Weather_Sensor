@@ -6,7 +6,7 @@ Este documento describe como realizar un dispositivo de bajo costo para registra
 
 ----------
 
-TIEMPO ESTIMADO: **240 min**
+TIEMPO ESTIMADO: **120/240 min (básico/avanzado)**
 
 -------
 
