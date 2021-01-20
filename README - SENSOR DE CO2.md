@@ -580,8 +580,16 @@ String humidity_topic = "sensors/" + device_name + "/humidity";        //Topic h
 String co2_topic = "sensors/" + device_name + "/co2";                  //Topic CO2
 ```
 
+## Dispositivo avanzado
 
+- Instalación en máquina virtual
+- Instalación de docker
+- Creación de contenedores de:
+  - Servicio de grafana
+  - Servicio de InfluxDB
+  - Servicio de MQTT
 
+//CONTINUAR
 
 
 *Imagen de portada creada por <a href='https://www.freepik.es/vectores/humo'>Vector de Humo creado por macrovector - www.freepik.es</a>
