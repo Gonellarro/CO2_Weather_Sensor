@@ -1,4 +1,4 @@
-![top](imgs/top.png)
+![top](imgs/cover.png)
 
 # README - SENSOR DE CO2
 
