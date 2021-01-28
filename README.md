@@ -899,12 +899,149 @@ El dispositivo montado
 
 ## Dispositivo avanzado
 
-- Instalación en máquina virtual
-- Instalación de docker
-- Creación de contenedores de:
-  - Servicio de grafana
-  - Servicio de InfluxDB
-  - Servicio de MQTT
+
+
+Ya tenemos el dispositivo montado y funcionando. Ahora queremos poder monitorizar de forma centralizada los datos que registra: CO2, temperatura, humedad y presión. Si bien hay que hacer notar, los datos de la concentración de CO2 parecen bastante reales y acertados, tanto los de temperatura y presión salen fuera de margen y solo se pueden tomar de forma cuantitativa y no cualitativa.
+
+Ejemplo de dashboard de monitorización:
+
+![grafana](imgs/grafana-dashboard.jpg)
+
+### Arquitectura
+
+- Por una parte, el dispositivo tiene la capacidad de poder conectarse a una red IP mediante WIFI pero debemos evitar que se pueda conectar con Internet. Solamente debe debe de ser accesible dentro de la red local. Esto lo hace más seguro y  tenemos el sistema menos expuesto a posibles ataques externos. 
+- Los datos obtenidos deben de incorporarse en una base de datos para poderlos gestionar de una forma adecuada.
+- Mediante un navegador web accedemos a la base de datos y obtenemos las gráficas que la aplicación web que elijamos nos muestre desde nuestra red local (si queremos que sea accesible podemos poner un proxy reverso, pero no es el objetivo de esta práctica. Si se quiere llevar a la práctica, recomendamos el docker *jwilder/nginx-proxy*).
+
+
+
+![arquitectura](imgs/arquitectura.svg)
+
+
+
+Una vez clara cual va a ser la arquitectura, debemos elegir que componentes usar. Debe de quedar claro que esta es una posible elección y que el mercado ofrece muchas soluciones tanto gratuitas como de pago y no necesariamente deberíamos hacerlo así. Es simplemente la que nos ha parecido que cubría mejor las necesidades del proyecto. 
+
+- **Máquina usada:** Máquina Virtual Ubuntu Server 20.04 (2GB de RAM, Core i3 7100) pero se puede usar una raspberry pi, una máquina dedicada o un servicio cloud
+- **Container:** docker-compose. 
+- **Servicio de monitorización:**  Grafana
+- **Base de datos:** InfluxDB
+- **Listener:**
+  - Mosquito MQTT
+  - Telegraf
+
+
+
+A esta configuración se le conoce como el stack TIG (Telegraf, InfluxDB y Grafana) con lo que encontraremos bastante información en Internet sobre ello si queremos indagar un poco más. El funcionamiento práctico es el siguiente:
+
+![implementación](imgs/iot-influxdb-grafana-mosquitto.png)
+
+Pasos para la instalación:
+
+El funcionamiento es muy sencillo si usamos docker-compose. Tan solo tendremos que realizar los siguientes pasos:
+
+1. Crear una carpeta en /home/user/docker/dc_TIG
+
+2. Escribimos en la consola
+
+   ```
+   nano docker-compose.yml 
+   ```
+
+   y pegamos el siguiente código
+
+```yaml
+version: "3.3"
+services:
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    networks:
+      - tig_net    
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./tig/data/influxdb:/var/lib/influxdb
+    restart: always
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    user: "0"
+    networks:
+      - tig_net    
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_volume:/var/lib/grafana
+    restart: always 
+
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:latest
+    networks:
+      - tig_net    
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    user: "0"
+    volumes:
+      - mosquitto_volume:/mosquitto
+    restart: always
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    networks:
+      - tig_net    
+    volumes:
+      - telegraf_volume:/etc/telegraf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    depends_on:
+      - influxdb
+      - mqtt
+
+  chronograf:
+    container_name: chronograf
+    image: chronograf:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./chronograf:/var/lib/chronograf"
+    networks:
+      - tig_net
+    
+networks:
+    tig_net:
+       name: proxy_net
+
+volumes:
+    grafana_volume:
+    telegraf_volume:
+    mosquitto_volume:
+```
+
+3. Escribimos en la consola
+
+nano telegraf.conf
+
+Y pegamos el código del fichero telegraf.conf
+
+4. Una vez creados los dos ficheros, ejecutaremos el comando:
+
+```
+docker-compose up -d
+```
+
+dentro de la carpeta *dc_tig* donde hemos creado los ficheros. Este punto es importante porque docker levanta las instancias que estén dentro del fichero docker-compose.yml de ese directorio.
+
+En este momento docker se bajará las imágenes de los servicios que necesita y creará las redes y volúmenes indicados en el docker-compose. 
+
+
+
+Dejo todos los ficheros necesarios para la configuración en la carpeta docker.
+
+
 
 //CONTINUAR
 
