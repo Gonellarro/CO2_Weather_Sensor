@@ -1268,19 +1268,27 @@ Dejamos el fichero entero telegraf.conf en la carpeta de docker.
 
 ```
 
+
+
 Estas son las partes que intervienen y como las montamos en el fichero docker-compose.yml para que se lancen y den como resultado un stack compacto y aparte del resto de containers que podamos tener en Docker. Ahora definimos como lo implementamos de forma práctica:
+
+> Nota: A partir de ahora todo debe de hacerse con sudo, con lo que recomiendo usar:
+>
+> ```bash
+> sudo su
+> ```
 
 1. Crear la carpeta */home/user/docker/dc_tig*
 
 2. Escribimos en la consola
 
-   ```
+   ```bash
    cd /home/user/docker/dc_tig
    nano docker-compose.yml 
-```
-   
+   ```
+
    y pegamos el código que hemos explicado arriba, que queda así:
-   
+
    ```yaml
    version: "3.3"
    services:
@@ -1351,7 +1359,7 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
        telegraf_volume:
        mosquitto_volume:
    ```
-   
+
    > Nota: Hemos añadido la parte de *chronograf*, pero no es impresicindible. Es útil de todas formas y por eso lo incluimos.
 
 3. En este punto ya podemos poner en marcha todos los servicios. Situándonos en la carpeta /home/user/docker/dc_tig ejecutaremos el comando:
@@ -1397,8 +1405,20 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
    docker/volumes/dc_tig_volume/_data
    ```
 
+   > Nota: Quiero hacer notar que esta no es la manera que me parezca mejor, ya que nos obliga a no controlar donde se crea el volumen de Telegraf, pero debo decir que no he conseguido que se guarde donde quiero, con lo cual al final he decidido hacerlo así. Reconozco que mi interés sería que quedase debajo de la carpeta dc_tig/telegraf, pero no lo he logrado. Hay que revisar este punto por si se puede mejorar.
 
+
+
+#### Setup de todo el sistema
+
+Ahora queda:
+
+- Crear usuario de grafana
+- Crear la BBDD en IfluxDB
+- Revisar con Chronograf que se reciben los datos
+- Crear un dashboard en grafana
 
 //CONTINUAR
 
 *Imagen de portada creada por <a href='https://www.freepik.es/vectores/humo'>Vector de Humo creado por macrovector - www.freepik.es</a>
+
