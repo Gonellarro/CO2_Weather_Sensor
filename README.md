@@ -911,7 +911,7 @@ Ejemplo de dashboard de monitorización:
 
 - Por una parte, el dispositivo tiene la capacidad de poder conectarse a una red IP mediante WIFI pero debemos evitar que se pueda conectar con Internet. Solamente debe debe de ser accesible dentro de la red local. Esto lo hace más seguro y  tenemos el sistema menos expuesto a posibles ataques externos. 
 - Los datos obtenidos deben de incorporarse en una base de datos para poderlos gestionar de una forma adecuada.
-- Mediante un navegador web accedemos a la base de datos y obtenemos las gráficas que la aplicación web que elijamos nos muestre desde nuestra red local (si queremos que sea accesible podemos poner un proxy reverso, pero no es el objetivo de esta práctica. Si se quiere llevar a la práctica, recomendamos el docker *jwilder/nginx-proxy*).
+- Mediante un navegador web accedemos a la base de datos y obtenemos las gráficas que la aplicación web que elijamos nos muestre desde nuestra red local (si queremos que sea accesible desde Internet, podemos poner un proxy reverso, pero no es el objetivo de esta práctica. Si se quiere realizar, recomendamos el docker *jwilder/nginx-proxy*).
 
 
 
@@ -935,46 +935,94 @@ A esta configuración se le conoce como el stack TIG (Telegraf, InfluxDB y Grafa
 
 ![implementación](imgs/iot-influxdb-grafana-mosquitto.png)
 
-Pasos para la instalación:
+#### Instalación
 
-El funcionamiento es muy sencillo si usamos docker-compose. Tan solo tendremos que realizar los siguientes pasos:
+1. **Instalar docker**: Ver [documentación](https://docs.docker.com/engine/install/ubuntu/) de docker para Ubuntu. En la misma página encontraremos como instalarlo en otros sistemas operativos.
 
-1. Crear una carpeta en /home/user/docker/dc_TIG
+   <u>Resumen de comandos:</u>
 
-2. Escribimos en la consola
+   Actualizamos y confirmamos que tenemos todos los paquetes para poder usar apt sobre un repositorio HTTPS:
 
+   ```bash
+   $ sudo apt-get update
+   
+   $ sudo apt-get install \
+       apt-transport-https \
+       ca-certificates \
+       curl \
+       gnupg-agent \
+       software-properties-common
    ```
-   nano docker-compose.yml 
+
+   Añadimos la clave GPG oficial de Docker:
+
+   ```bash
+   $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
    ```
 
-   y pegamos el siguiente código
+   Añadimos el repositorio **estable**
+
+   ```bash
+   $ sudo add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) \
+      stable"
+   ```
+
+   Finalmente instalamos el motor de Docker:
+
+   ```bash
+    $ sudo apt-get update
+    $ sudo apt-get install docker-ce docker-ce-cli containerd.io
+   ```
+
+   Verificamos que la instalación de Docker Engine está funcionando correctamente arrancando la imagen *hello-world*
+
+   ```bash
+   $ sudo docker run hello-world
+   ```
+
+   Si va bien, nos saldrá una pantalla como esta:
+
+   ![docker_inst](imgs/docker_inst.png)
+
+   
+
+2. **Instalar docker-compose:** Para ello seguimos la documentación oficial de docker que podemos encontrar [aquí](https://docs.docker.com/compose/install/). Aunque está alojada en Github, la misma página de docker tiene un manual muy completo y es el que hemos seguido.
+
+   <u>Resumen de comandos:</u>
+
+   Descarga de la última versión estable de docker-compose:
+
+   ```bash
+   sudo curl -L "https://github.com/docker/compose/releases/download/1.28.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   ```
+
+   Añadimos los permisos de ejecución al binario:
+
+   ```bash
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+
+   Comprobamos que la instalación ha sido correcta ejecutando el comando:
+
+   ```bash
+   docker-compose --version
+   ```
+
+   Si ha ido bien debemos obtener un mensaje como este:
+
+   ![docker-compose-inst](imgs/docker-compose_inst.png)
+
+
+
+#### Configuración
+
+Ahora ya tenemos la base instalada para poder correr los servicios necesarios. Repasemos el montaje:
+
+**MQTT:** El dispositivo debe enviar las medidas mediante un cliente MQTT a un servidor MQTT. Por tanto, <u>debemos crear un servicio en docker</u>.  La imagen que usaremos será la *eclipse-mosquitto:latest*. A parte, debe de estar configurado tanto para recibir los datos del dispositivo como para enviarlos a la base de datos. Veamos quedaría en la configuración de docker-compose:
 
 ```yaml
-version: "3.3"
-services:
-  influxdb:
-    container_name: influxdb
-    image: influxdb
-    networks:
-      - tig_net    
-    ports:
-      - "8086:8086"
-    volumes:
-      - ./tig/data/influxdb:/var/lib/influxdb
-    restart: always
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    user: "0"
-    networks:
-      - tig_net    
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_volume:/var/lib/grafana
-    restart: always 
-
   mqtt:
     container_name: mqtt
     image: eclipse-mosquitto:latest
@@ -987,7 +1035,19 @@ services:
     volumes:
       - mosquitto_volume:/mosquitto
     restart: always
+```
 
+<u>Puntos a tener en cuenta:</u>
+
+	- puertos de escucha de los dispositivos: 1883
+	- puerto de escucha web: 9001
+	- definimos la red para este stack
+
+**TELEGRAF:** El servidor MQTT no es capaz de transferir los datos directamente a la base de datos y necesita un servicio de escucha que los pase en el formato correcto de la base de datos elegida, en este caso, InfluxDB. El programa para traducirlo es el Telegraf. La imagen elegida es *telegraf*. Su configuración se divide en 2 partes: *docker-compose* y un fichero de configuración. 
+
+docker-compose:
+
+```yaml
   telegraf:
     container_name: telegraf
     image: telegraf
@@ -1000,46 +1060,342 @@ services:
     depends_on:
       - influxdb
       - mqtt
+```
 
-  chronograf:
-    container_name: chronograf
-    image: chronograf:latest
-    ports:
-      - "8888:8888"
-    volumes:
-      - "./chronograf:/var/lib/chronograf"
+Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicación *dc_tig/tig/conf/telegraf/telegraf.conf* :
+
+*Parte MQTT*
+
+```bash
+ [[inputs.mqtt_consumer]]
+#   ## Broker URLs for the MQTT server or cluster.  To connect to multiple
+#   ## clusters or standalone servers, use a seperate plugin instance.
+#   ##   example: servers = ["tcp://localhost:1883"]
+#   ##            servers = ["ssl://localhost:1883"]
+#   ##            servers = ["ws://localhost:1883"]
+   servers = ["tcp://mqtt:1883"]
+#
+#   ## Topics that will be subscribed to.
+   topics = [
+     #"telegraf/host01/cpu",
+     #"telegraf/+/mem",
+     "sensors/#",
+   ]
+#
+#   ## The message topic will be stored in a tag specified by this value.  If set
+#   ## to the empty string no topic tag will be created.
+#   # topic_tag = "topic"
+#
+#   ## QoS policy for messages
+#   ##   0 = at most once
+#   ##   1 = at least once
+#   ##   2 = exactly once
+#   ##
+#   ## When using a QoS of 1 or 2, you should enable persistent_session to allow
+#   ## resuming unacknowledged messages.
+    qos = 0
+#
+#   ## Connection timeout for initial connection in seconds
+#   # connection_timeout = "30s"
+#
+#   ## Maximum messages to read from the broker that have not been written by an
+#   ## output.  For best throughput set based on the number of metrics within
+#   ## each message and the size of the output's metric_batch_size.
+#   ##
+#   ## For example, if each message from the queue contains 10 metrics and the
+#   ## output metric_batch_size is 1000, setting this to 100 will ensure that a
+#   ## full batch is collected and the write is triggered immediately without
+#   ## waiting until the next flush_interval.
+#   # max_undelivered_messages = 1000
+#
+#   ## Persistent session disables clearing of the client session on connection.
+#   ## In order for this option to work you must also set client_id to identify
+#   ## the client.  To receive messages that arrived while the client is offline,
+#   ## also set the qos option to 1 or 2 and don't forget to also set the QoS when
+#   ## publishing.
+#   # persistent_session = false
+#
+#   ## If unset, a random client ID will be generated.
+#   # client_id = ""
+#
+#   ## Username and password to connect MQTT server.
+    username = "telegraf"
+    password = "telegraf"
+#
+#   ## Optional TLS Config
+#   # tls_ca = "/etc/telegraf/ca.pem"
+#   # tls_cert = "/etc/telegraf/cert.pem"
+#   # tls_key = "/etc/telegraf/key.pem"
+#   ## Use TLS but skip chain & host verification
+#   # insecure_skip_verify = false
+#
+#   ## Data format to consume.
+#   ## Each data format has its own unique set of configuration options, read
+#   ## more about them here:
+#   ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_INPUT.md
+    #data_format = "influx"
+    data_format = "value"
+    data_type = "float"
+```
+
+<u>Puntos importantes:</u>
+
+- servidor:  tcp://mqtt:1883. Hay que tener en cuenta que el servicio de docker-compose crea una red privada con los nombres de los "servicios" definidos en el fichero yml. El nombre que le pongamos al servicio de mqtt debe de ser el que pongamos aquí como servidor. 
+- topics: aquí hay que definir los topics que queremos que escuche/publique el servidor MQTT
+- username/password: deberemos de configurar el servicio con un usuario y contraseña en el fichero yml. Estos datos son los que pondremos aquí.
+- data_format: el formato de datos es importante. Reconozco que es el punto en que más fallo porque no lo tengo muy claro. He probado influx y he tendio problemas, con lo que he optado por estos, pero no lo tengo muy claro que deba de ser así.
+
+
+
+*Parte InfluxDB*
+
+```yaml
+[[outputs.influxdb]]
+  ## The full HTTP or UDP URL for your InfluxDB instance.
+  ##
+  ## Multiple URLs can be specified for a single cluster, only ONE of the
+  ## urls will be written to each interval.
+  # urls = ["unix:///var/run/influxdb.sock"]
+  # urls = ["udp://127.0.0.1:8089"]
+   urls = ["http://influxdb:8086"]
+
+  ## The target database for metrics; will be created as needed.
+  ## For UDP url endpoint database needs to be configured on server side.
+   database = "telegraf"
+
+  ## The value of this tag will be used to determine the database.  If this
+  ## tag is not set the 'database' option is used as the default.
+  # database_tag = ""
+
+  ## If true, the 'database_tag' will not be included in the written metric.
+  # exclude_database_tag = false
+
+  ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
+  ## Telegraf with a user without permissions to create databases or when the
+  ## database already exists.
+   skip_database_creation = true
+
+  ## Name of existing retention policy to write to.  Empty string writes to
+  ## the default retention policy.  Only takes effect when using HTTP.
+   retention_policy = ""
+
+  ## The value of this tag will be used to determine the retention policy.  If this
+  ## tag is not set the 'retention_policy' option is used as the default.
+  # retention_policy_tag = ""
+
+  ## If true, the 'retention_policy_tag' will not be included in the written metric.
+  # exclude_retention_policy_tag = false
+
+  ## Write consistency (clusters only), can be: "any", "one", "quorum", "all".
+  ## Only takes effect when using HTTP.
+  # write_consistency = "any"
+
+  ## Timeout for HTTP messages.
+  # timeout = "5s"
+
+  ## HTTP Basic Auth
+   username = "telegraf"
+   password = "telegraf"
+
+  ## HTTP User-Agent
+  # user_agent = "telegraf"
+
+  ## UDP payload size is the maximum packet size to send.
+  # udp_payload = "512B"
+
+  ## Optional TLS Config for use on HTTP connections.
+  # tls_ca = "/etc/telegraf/ca.pem"
+  # tls_cert = "/etc/telegraf/cert.pem"
+  # tls_key = "/etc/telegraf/key.pem"
+  ## Use TLS but skip chain & host verification
+  # insecure_skip_verify = false
+
+  ## HTTP Proxy override, if unset values the standard proxy environment
+  ## variables are consulted to determine which proxy, if any, should be used.
+  # http_proxy = "http://corporate.proxy:3128"
+
+  ## Additional HTTP headers
+  # http_headers = {"X-Special-Header" = "Special-Value"}
+
+  ## HTTP Content-Encoding for write request body, can be set to "gzip" to
+  ## compress body or "identity" to apply no encoding.
+  # content_encoding = "gzip"
+
+  ## When true, Telegraf will output unsigned integers as unsigned values,
+  ## i.e.: "42u".  You will need a version of InfluxDB supporting unsigned
+  ## integer values.  Enabling this option will result in field type errors if
+  ## existing data has been written.
+  # influx_uint_support = false
+
+```
+
+<u>Puntos importantes:</u>
+
+- urls: Igual que en el caso anterior, debemos de indicar el nombre del servidor que corresponde con el de la imagen que hemos configurado en el fichero yml.
+- database: debe de ser la que le indiquemos a **<u>InfluxDB al crearlo ???</u>**
+- user/password: **<u>repasar</u>**
+
+Dejamos el fichero entero telegraf.conf en la carpeta de docker.
+
+**INFLUXDB:** Esta es la parte de la base de datos. Esta debe almacenar los datos del dispositivo. En el caso de Influx se tratan como medidas o *meassures*. La parte de configuración del fichero docker-compose es esta:
+
+```yaml
+  influxdb:
+    container_name: influxdb
+    image: influxdb
     networks:
-      - tig_net
-    
-networks:
-    tig_net:
-       name: proxy_net
-
-volumes:
-    grafana_volume:
-    telegraf_volume:
-    mosquitto_volume:
+   		- tig_net    
+    ports:
+        - "8086:8086"
+    volumes:
+        - ./tig/data/influxdb:/var/lib/influxdb
+    start: always
 ```
 
-3. Escribimos en la consola
+**GRAFANA:** Finalmente solo nos queda comentar la parte del servicio de grafana, donde podremos crear el dashboard con los datos que le ofrezca Influx. La parte de configuración del fichero docker-compose es esta:
 
-nano telegraf.conf
-
-Y pegamos el código del fichero telegraf.conf
-
-4. Una vez creados los dos ficheros, ejecutaremos el comando:
+```yaml
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    networks:
+      - tig_net    
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_volume:/var/lib/grafana
+    restart: always
 
 ```
-docker-compose up -d
+
+Estas son las partes que intervienen y como las montamos en el fichero docker-compose.yml para que se lancen y den como resultado un stack compacto y aparte del resto de containers que podamos tener en Docker. Ahora definimos como lo implementamos de forma práctica:
+
+1. Crear la carpeta */home/user/docker/dc_tig*
+
+2. Escribimos en la consola
+
+   ```
+   cd /home/user/docker/dc_tig
+   nano docker-compose.yml 
 ```
+   
+   y pegamos el código que hemos explicado arriba, que queda así:
+   
+   ```yaml
+   version: "3.3"
+   services:
+     influxdb:
+       container_name: influxdb
+       image: influxdb
+       networks:
+         - tig_net    
+       ports:
+         - "8086:8086"
+       volumes:
+         - ./tig/data/influxdb:/var/lib/influxdb
+       restart: always
+   
+     grafana:
+       container_name: grafana
+       image: grafana/grafana
+       networks:
+         - tig_net    
+       ports:
+         - "3000:3000"
+       volumes:
+         - grafana_volume:/var/lib/grafana
+       restart: always 
+   
+     mqtt:
+       container_name: mqtt
+       image: eclipse-mosquitto:latest
+       networks:
+         - tig_net    
+       ports:
+         - "1883:1883"
+         - "9001:9001"
+       user: "0"
+       volumes:
+         - mosquitto_volume:/mosquitto
+       restart: always
+   
+     telegraf:
+       container_name: telegraf
+       image: telegraf
+       networks:
+         - tig_net    
+       volumes:
+         - telegraf_volume:/etc/telegraf:ro
+         - /var/run/docker.sock:/var/run/docker.sock
+       restart: always
+       depends_on:
+         - influxdb
+         - mqtt
+   
+     chronograf:
+       container_name: chronograf
+       image: chronograf:latest
+       ports:
+         - "8888:8888"
+       volumes:
+         - "./chronograf:/var/lib/chronograf"
+       networks:
+         - tig_net
+       
+   networks:
+       tig_net:
+          name: tig_net
+   
+   volumes:
+       grafana_volume:
+       telegraf_volume:
+       mosquitto_volume:
+   ```
+   
+   > Nota: Hemos añadido la parte de *chronograf*, pero no es impresicindible. Es útil de todas formas y por eso lo incluimos.
 
-dentro de la carpeta *dc_tig* donde hemos creado los ficheros. Este punto es importante porque docker levanta las instancias que estén dentro del fichero docker-compose.yml de ese directorio.
+3. En este punto ya podemos poner en marcha todos los servicios. Situándonos en la carpeta /home/user/docker/dc_tig ejecutaremos el comando:
 
-En este momento docker se bajará las imágenes de los servicios que necesita y creará las redes y volúmenes indicados en el docker-compose. 
+   ```bash
+   docker-compose up -d
+   ```
 
+   Si lo hemos hecho bien, empezará a descargarse las imágenes de cada servicio y al final las pondrá en marcha. Nos saldrá una imagen como la siguiente:
 
+   ![docker_compose_up](imgs/docker_compose_up.png)
 
-Dejo todos los ficheros necesarios para la configuración en la carpeta docker.
+   En este punto ya tenemos los servicios levantados y podemos acceder a, por ejemplo grafana o InfluxDB, mediante un navegador accediendo a la IP o localhost y el puerto de cada servicio.
+   ![grafana_start](imgs/grafana_start.png)
+
+4.  Pero si nos fijamos, aun no hemos copiado la configuración de Telegraf. En este momento hemos creado la estructura de todo el stack y docker ha podido generar las carpetas necesarias para arrancar.  Para aplicar la configuración de Telegraf debemos parar el stack y copiar el fichero a la ruta correspondiente.
+
+   - Revisamos donde se ha creado el volumen de Telegraf:
+
+     ```bash
+     docker volume list
+     docker volume inspect <nombre_del_volumen_listado>
+     ```
+
+     ![docker-volume-inspect](imgs/docker-volume-inspect.png)
+     Como podemos observar en la imagen, la ruta del volumen de telegraf es:
+
+     */var/lib/docker/volumes/dc_tig_telegraf_volume/_data*
+
+   - Paramos los servicios y copiamos el fichero telegraf.conf (lo hemos copiado antes en la carpeta donde estemos): 
+
+     ```bash
+     docker-compose down
+     cp telegraf.conf /var/lib/docker/volumes/dc_tig_telegraf_volume/_data/.
+     ```
+
+   - Arrancamos de nuevo los servicios
+     docker-compose up -d
+
+5. Copiamos el fichero telegraf.conf del github a la  carpeta /var/snap/docker/common/var-lib-
+
+   ```bash
+   docker/volumes/dc_tig_volume/_data
+   ```
 
 
 
