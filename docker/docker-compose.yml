@@ -1,0 +1,74 @@
+version: "3.3"
+services:
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    networks:
+      - proxy_net    
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./tig/data/influxdb:/var/lib/influxdb
+    restart: always
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    user: "0"
+    networks:
+      - proxy_net    
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_volume:/var/lib/grafana
+    restart: always
+    environment:
+      - VIRTUAL_HOST=grafana.gonella.duckdns.org
+      - LETSENCRYPT_HOST=grafana.gonella.duckdns.org
+      - LETSENCRYPT_EMAIL=marti.vich@gmail.com    
+
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:latest
+    networks:
+      - proxy_net    
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    user: "0"
+    volumes:
+      - mosquitto_volume:/mosquitto
+    restart: always
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    networks:
+      - proxy_net    
+    volumes:
+      - telegraf_volume:/etc/telegraf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    depends_on:
+      - influxdb
+      - mqtt
+
+  chronograf:
+    container_name: chronograf
+    image: chronograf:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./chronograf:/var/lib/chronograf"
+    networks:
+      - proxy_net
+    
+networks:
+    proxy_net:
+       external:
+          name: proxy_net
+
+volumes:
+    grafana_volume:
+    telegraf_volume:
+    mosquitto_volume:
