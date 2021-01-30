@@ -957,7 +957,7 @@ Si juntamos MQTT con mosquito y TIG:
 
 1. **Instalar docker**: Ver [documentación](https://docs.docker.com/engine/install/ubuntu/) de docker para Ubuntu. En la misma página encontraremos como instalarlo en otros sistemas operativos.
 
-   <u>Resumen de comandos:</u>
+   ***Resumen de comandos:***
 
    Actualizamos y confirmamos que tenemos todos los paquetes para poder usar apt sobre un repositorio HTTPS:
 
@@ -1008,7 +1008,7 @@ Si juntamos MQTT con mosquito y TIG:
 
 2. **Instalar docker-compose:** Para ello seguimos la documentación oficial de docker que podemos encontrar [aquí](https://docs.docker.com/compose/install/). Aunque está alojada en Github, la misma página de docker tiene un manual muy completo y es el que hemos seguido.
 
-   <u>Resumen de comandos:</u>
+   ***Resumen de comandos:***
 
    Descarga de la última versión estable de docker-compose:
 
@@ -1040,7 +1040,7 @@ Si juntamos MQTT con mosquito y TIG:
 
 Ahora ya tenemos la base instalada para poder correr los servicios necesarios. Repasemos el montaje:
 
-**MQTT:** El dispositivo debe enviar las medidas mediante un cliente MQTT a un servidor MQTT. Por tanto, <u>debemos crear un servicio en docker</u>.  La imagen que usaremos será la *eclipse-mosquitto:latest*. A parte, debe de estar configurado tanto para recibir los datos del dispositivo como para enviarlos a la base de datos. Veamos quedaría en la configuración de docker-compose:
+**MQTT:** El dispositivo debe enviar las medidas mediante un cliente MQTT a un servidor MQTT.  Debe de estar configurado tanto para recibir los datos del dispositivo como para enviarlos a la base de datos. Veamos quedaría en la configuración de *docker-compose*:
 
 ```yaml
   mqtt:
@@ -1057,13 +1057,17 @@ Ahora ya tenemos la base instalada para poder correr los servicios necesarios. R
     restart: always
 ```
 
-<u>Puntos a tener en cuenta:</u>
+***Puntos importantes***
 
-	- puertos de escucha de los dispositivos: 1883
-	- puerto de escucha web: 9001
-	- definimos la red para este stack
+```
+- puertos de escucha de los dispositivos: 1883
+- puerto de escucha web: 9001
+- definimos la red para este stack
+```
 
-**TELEGRAF:** El servidor MQTT no es capaz de transferir los datos directamente a la base de datos y necesita un servicio de escucha que los pase en el formato correcto de la base de datos elegida, en este caso, InfluxDB. El programa para traducirlo es el Telegraf. La imagen elegida es *telegraf*. Su configuración se divide en 2 partes: *docker-compose* y un fichero de configuración (Telegraf sirve para recolectar información de muy diversas fuentes y consolidarlas a otras muy diversas bases de datos/componentes). 
+*Info de la imagen: https://hub.docker.com/_/eclipse-mosquitto*
+
+**TELEGRAF:** El servidor MQTT no es capaz de transferir los datos directamente a la base de datos y necesita un servicio de escucha que los pase en el formato correcto de la base de datos elegida, en este caso, InfluxDB. El programa para traducirlo es el Telegraf. Su configuración se divide en 2 partes: *docker-compose* y un fichero de configuración (Telegraf sirve para recolectar información de muy diversas fuentes y consolidarlas a otras muy diversas bases de datos/componentes). 
 
 docker-compose:
 
@@ -1158,12 +1162,17 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
     data_type = "float"
 ```
 
-<u>Puntos importantes:</u>
+***Puntos importantes:***
 
+```
 - servidor:  tcp://mqtt:1883. Hay que tener en cuenta que el servicio de docker-compose crea una red privada con los nombres de los "servicios" definidos en el fichero yml. El nombre que le pongamos al servicio de mqtt debe de ser el que pongamos aquí como servidor. 
+
 - topics: aquí hay que definir los topics que queremos que escuche/publique el servidor MQTT
+
 - username/password: deberemos de configurar el servicio con un usuario y contraseña en el fichero yml. Estos datos son los que pondremos aquí.
+
 - data_format: el formato de datos es importante. Reconozco que es el punto en que más fallo porque no lo tengo muy claro. He probado influx y he tendio problemas, con lo que he optado por estos, pero no lo tengo muy claro que deba de ser así.
+```
 
 
 
@@ -1251,9 +1260,13 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
 
 <u>Puntos importantes:</u>
 
+```
 - urls: Igual que en el caso anterior, debemos de indicar el nombre del servidor que corresponde con el de la imagen que hemos configurado en el fichero yml.
-- database: debe de ser la que le indiquemos a **<u>InfluxDB al crearlo ???</u>**
-- user/password: **<u>repasar</u>**
+
+- database: debe de ser la que le indiquemos a InfluxDB al crearlo 
+
+- user/password: XXXXXX - REPASSAR!!!!
+```
 
 Dejamos el fichero entero telegraf.conf en la carpeta de docker.
 
@@ -1292,9 +1305,11 @@ Dejamos el fichero entero telegraf.conf en la carpeta de docker.
 
 ```
 
+*Info sobre la imagen: https://hub.docker.com/r/grafana/grafana*
 
 
-Estas son las partes que intervienen y como las montamos en el fichero docker-compose.yml para que se lancen y den como resultado un stack compacto y aparte del resto de containers que podamos tener en Docker. Ahora definimos como lo implementamos de forma práctica:
+
+Estas son las partes que intervienen y como las definimos en el fichero docker-compose.yml para que se lancen y den como resultado un stack compacto y aparte del resto de containers que podamos tener en Docker. Ahora lo implementamos de forma práctica:
 
 > Nota: A partir de ahora todo debe de hacerse con sudo, con lo que recomiendo usar:
 >
@@ -1304,7 +1319,11 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
 
 1. Crear la carpeta */home/user/docker/dc_tig*
 
-2. Escribimos en la consola
+   ```bash
+   mkdir /home/user/docker/dc_tig
+   ```
+
+2. Crear el fichero de *docker-compose*
 
    ```bash
    cd /home/user/docker/dc_tig
@@ -1386,7 +1405,7 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
 
    > Nota: Hemos añadido la parte de *chronograf*, pero no es impresicindible. Es útil de todas formas y por eso lo incluimos.
 
-3. En este punto ya podemos poner en marcha todos los servicios. Situándonos en la carpeta /home/user/docker/dc_tig ejecutaremos el comando:
+3. Poner en marcha todos los servicios. Situándonos en la carpeta /home/user/docker/dc_tig ejecutaremos el comando:
 
    ```bash
    docker-compose up -d
@@ -1396,12 +1415,18 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
 
    ![docker_compose_up](imgs/docker_compose_up.png)
 
+   
+
+   #### Verificación
+
+   -----------
+
    A partir de aquí, ya tenemos los servicios levantados y podemos acceder a cada uno de ellos:
 
-   - <u>Grafana</u>: mediante un navegador accediendo a la IP o localhost:3000.
+   - **Grafana**: mediante un navegador accediendo a la IP o localhost:3000.
      ![grafana_start](imgs/grafana_start.png)
 
-   - <u>Influx</u>: mediante el acceso directo al docker en cuestión arrancando el cliente de influx:
+   - **Influx**: mediante el acceso directo al docker en cuestión arrancando el cliente de influx:
 
      ```bash
      docker exec -it influxdb influx
@@ -1409,23 +1434,21 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
 
      ![influx_show_databases](imgs/influx_show_databases.png)
 
-     Usando el comando show databases; podemos observar que ya se ha creado la base de datos para telegraf.
+     Usando el comando *show databases;* podemos observar que ya se ha creado la base de datos para telegraf.
 
-   - <u>Telegraf</u>: Este servicio es el que tiene más enjundia. No se puede configurar a priori con un volumen en la ruta que nosotros le indiquemos, porque falla. Así que hay que levantarlo tal y como hemos indicado antes y cambiarlo ahora. Así como se encuentra configurado ahora, la capeta de configuración de Telegraf, aunque accesible (mediante el acceso al volumen creado) es algo más tediosa. Se puede hacer y no da ningún problema, pero es más laborioso. 
-  Para hacerlos más accesible, he optado por:
-   
+   - **Telegraf**: Este servicio es el que tiene más enjundia. No se puede configurar a priori con un volumen en la ruta que nosotros le indiquemos, porque falla. Así que hay que levantarlo tal y como hemos indicado antes y cambiarlo ahora. Así como se encuentra configurado ahora, la capeta de configuración de Telegraf, aunque accesible (mediante el acceso al volumen creado) es algo más tediosa. Se puede hacer y no da ningún problema, pero es más laborioso. 
+     Para hacerlos más accesible, he optado por:
+
      - parar de nuevo el docker-compose:
-   
-    ```bash
+
+       ```bash
        docker-compose down
        ```
 
-       
+     - modificar la linea del volumen del fichero *docker-compose.yml* que hace referencia al volumen y ponerle ahora la ruta donde queremos que esté.
 
-     - modificar la linea del volumen de *docker-compose.yml* que hace referencia al volumen y ponerle ahora la ruta donde quiero que esté.
-   
      ```yaml
-    telegraf:
+       telegraf:
          container_name: telegraf
          image: telegraf
          networks:
@@ -1438,28 +1461,28 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
            - influxdb
            - mqtt
      ```
-   
+
      - copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
      - levantar de nuevo los servicios.
-   
+
      ```bash
      docker-compose up -d
      ```
-   
+
      Para saber si Telegraf se ha levantado correctamente, interrogaremos al log del mismo servicio, tal y como indican en la [documentación](https://hub.docker.com/_/telegraf) 
-   
+
      ```bash
      docker logs -f telegraf
      ```
-   
+
      ![telegraf_log](imgs/telegraf_log.png)
-   
-   - <u>MQTT</u>: podremos ver que el servicio de MQTT está levantado usando un cliente o tal y como hemos hecho anteriormente, revisando los logs del propio contenedor.
-   
+
+   - **MQTT**: podremos ver que el servicio de MQTT está levantado usando un cliente o tal y como hemos hecho anteriormente, revisando los logs del propio contenedor.
+
      ```bash
      docker logs -f mqtt
      ```
-   
+
      ![mqtt_log](imgs/mqtt_log.png)
 
 
