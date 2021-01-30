@@ -1078,7 +1078,7 @@ docker-compose:
     networks:
       - tig_net    
     volumes:
-      - telegraf_volume:/etc/telegraf:ro
+      - ./tig/config/telegraf:/etc/telegraf:ro
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
     depends_on:
@@ -1202,7 +1202,7 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
   ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
   ## Telegraf with a user without permissions to create databases or when the
   ## database already exists.
-   skip_database_creation = true
+   skip_database_creation = false
 
   ## Name of existing retention policy to write to.  Empty string writes to
   ## the default retention policy.  Only takes effect when using HTTP.
@@ -1258,17 +1258,15 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
 
 ```
 
-<u>Puntos importantes:</u>
+***Puntos importantes:***
 
 ```
 - urls: Igual que en el caso anterior, debemos de indicar el nombre del servidor que corresponde con el de la imagen que hemos configurado en el fichero yml.
 
-- database: debe de ser la que le indiquemos a InfluxDB al crearlo 
+- database: debe de ser la BD que creamos en el servicio de InfluxDB 
 
-- user/password: XXXXXX - REPASSAR!!!!
+- user/password: los que se indican en el servicio de InfluxDB
 ```
-
-Dejamos el fichero entero telegraf.conf en la carpeta de docker.
 
 *Info sobre la imagen https://hub.docker.com/_/telegraf*
 
@@ -1284,7 +1282,19 @@ Dejamos el fichero entero telegraf.conf en la carpeta de docker.
         - "8086:8086"
     volumes:
         - ./tig/data/influxdb:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=telegraf
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=influx
+      - INFLUXDB_USER=telegraf
+      - INFLUXDB_USER_PASSWORD=telegraf  
     start: always
+```
+
+***Puntos importantes:***
+
+```
+- environment: Aquí refeljamos todos los usuarios y passwords de Influx. Debemos respetar los que indiquemos aquí con los que hemos indicado en el apartado de Telegraf
 ```
 
 *Info sobre la imagen: https://hub.docker.com/_/influxdb*
@@ -1344,6 +1354,12 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
          - "8086:8086"
        volumes:
          - ./tig/data/influxdb:/var/lib/influxdb
+       environment:
+         - INFLUXDB_DB=telegraf
+         - INFLUXDB_ADMIN_USER=admin
+         - INFLUXDB_ADMIN_PASSWORD=influx
+         - INFLUXDB_USER=telegraf
+         - INFLUXDB_USER_PASSWORD=telegraf      
        restart: always
    
      grafana:
@@ -1376,7 +1392,7 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
        networks:
          - tig_net    
        volumes:
-         - telegraf_volume:/etc/telegraf:ro
+         - ./tig/config/telegraf:/etc/telegraf:ro
          - /var/run/docker.sock:/var/run/docker.sock
        restart: always
        depends_on:
@@ -1436,53 +1452,36 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
 
      Usando el comando *show databases;* podemos observar que ya se ha creado la base de datos para telegraf.
 
-   - **Telegraf**: Este servicio es el que tiene más enjundia. No se puede configurar a priori con un volumen en la ruta que nosotros le indiquemos, porque falla. Así que hay que levantarlo tal y como hemos indicado antes y cambiarlo ahora. Así como se encuentra configurado ahora, la capeta de configuración de Telegraf, aunque accesible (mediante el acceso al volumen creado) es algo más tediosa. Se puede hacer y no da ningún problema, pero es más laborioso. 
-     Para hacerlos más accesible, he optado por:
-
-     - parar de nuevo el docker-compose:
-
-       ```bash
+   - **Telegraf**: Este servicio tiene un poco más de misterio. Al levantarlo así, que es tal y como se recomienda en la documentación, no encuentra el fichero de configuración, con lo cual, hay que pararlo, copiarlo y volverlo a levantar:
+     
+- parar de nuevo el docker-compose:
+     
+  ```bash
        docker-compose down
        ```
-
-     - modificar la linea del volumen del fichero *docker-compose.yml* que hace referencia al volumen y ponerle ahora la ruta donde queremos que esté.
-
-     ```yaml
-       telegraf:
-         container_name: telegraf
-         image: telegraf
-         networks:
-           - tig_net    
-         volumes:
-           - ./tig/config/telegraf:/etc/telegraf:ro
-           - /var/run/docker.sock:/var/run/docker.sock
-         restart: always
-         depends_on:
-           - influxdb
-           - mqtt
-     ```
-
-     - copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
-     - levantar de nuevo los servicios.
-
+     
+- copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
+     
+- levantar de nuevo los servicios.
+     
      ```bash
      docker-compose up -d
      ```
-
+     
      Para saber si Telegraf se ha levantado correctamente, interrogaremos al log del mismo servicio, tal y como indican en la [documentación](https://hub.docker.com/_/telegraf) 
-
+     
      ```bash
      docker logs -f telegraf
      ```
-
+     
      ![telegraf_log](imgs/telegraf_log.png)
-
+     
    - **MQTT**: podremos ver que el servicio de MQTT está levantado usando un cliente o tal y como hemos hecho anteriormente, revisando los logs del propio contenedor.
 
      ```bash
      docker logs -f mqtt
-     ```
-
+  ```
+   
      ![mqtt_log](imgs/mqtt_log.png)
 
 
@@ -1494,8 +1493,13 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
 Ahora queda:
 
 - Crear usuario de grafana
+
+  Usuari admin inicial, contrasenya admin
+
 - Crear la BBDD en IfluxDB
+
 - Revisar con Chronograf que se reciben los datos
+
 - Crear un dashboard en grafana
 
 //CONTINUAR
