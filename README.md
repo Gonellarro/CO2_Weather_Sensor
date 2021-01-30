@@ -897,21 +897,29 @@ El dispositivo montado
 
 
 
+--------
+
 ## Dispositivo avanzado
 
 
 
-Ya tenemos el dispositivo montado y funcionando. Ahora queremos poder monitorizar de forma centralizada los datos que registra: CO2, temperatura, humedad y presión. Si bien hay que hacer notar, los datos de la concentración de CO2 parecen bastante reales y acertados, tanto los de temperatura y presión salen fuera de margen y solo se pueden tomar de forma cuantitativa y no cualitativa.
+Ya tenemos el dispositivo montado y funcionando. Ahora queremos poder monitorizar de forma centralizada los datos que registra: CO2, temperatura, humedad y presión. Si bien hay que hacer notar, los datos de la concentración de CO2 parecen bastante reales y acertados, tanto los de temperatura como de presión salen fuera de margen y solo se pueden tomar de forma cuantitativa y no cualitativa.
 
-Ejemplo de dashboard de monitorización:
+Ejemplo de dashboard de monitorización, que es a lo que aspiramos en este punto:
 
 ![grafana](imgs/grafana-dashboard.jpg)
 
 ### Arquitectura
 
-- Por una parte, el dispositivo tiene la capacidad de poder conectarse a una red IP mediante WIFI pero debemos evitar que se pueda conectar con Internet. Solamente debe debe de ser accesible dentro de la red local. Esto lo hace más seguro y  tenemos el sistema menos expuesto a posibles ataques externos. 
-- Los datos obtenidos deben de incorporarse en una base de datos para poderlos gestionar de una forma adecuada.
-- Mediante un navegador web accedemos a la base de datos y obtenemos las gráficas que la aplicación web que elijamos nos muestre desde nuestra red local (si queremos que sea accesible desde Internet, podemos poner un proxy reverso, pero no es el objetivo de esta práctica. Si se quiere realizar, recomendamos el docker *jwilder/nginx-proxy*).
+---------
+
+- Por una parte, el dispositivo tiene la capacidad de poder conectarse a una red IP mediante WIFI pero debemos evitar que se pueda conectar con Internet. <u>Solamente debe de ser accesible dentro de la red local</u>. Esto lo hace más seguro y  tenemos el sistema menos expuesto a posibles ataques externos. Por tanto, pongo como premisa que el dispositivo (Wemos D1 mini) no esté conectado a una red externa. Esto no tiene que ver que no se pueda monitorizar desde el exterior, ojo. Lo que hay que evitar a toda costa es que nuestro dispositivo pueda ser accesible.
+
+- Los datos obtenidos deben de incorporarse en una base de datos local para poderlos gestionar de una forma adecuada.
+
+- Mediante un navegador web accedemos a la base de datos y obtenemos las gráficas que la aplicación web que elijamos nos muestre desde nuestra red local.
+
+  > **Nota**: Si queremos que sea accesible desde Internet, podemos poner un proxy reverso, pero no es el objetivo de esta práctica. Si se quiere realizar, recomendamos el docker *jwilder/nginx-proxy*.
 
 
 
@@ -935,7 +943,17 @@ A esta configuración se le conoce como el stack TIG (Telegraf, InfluxDB y Grafa
 
 ![implementación](imgs/iot-influxdb-grafana-mosquitto.png)
 
+*Fuente: https://hackmd.io/@lnu-iot/tig-stack*
+
+Si juntamos MQTT con mosquito y TIG: 
+
+![iot_2](imgs/iot-influxdb-grafana-mosquitto_2.png)
+
+*Fuente: https://dzone.com/articles/raspberry-pi-iot-sensors-influxdb-mqtt-and-grafana*
+
 #### Instalación
+
+----------------
 
 1. **Instalar docker**: Ver [documentación](https://docs.docker.com/engine/install/ubuntu/) de docker para Ubuntu. En la misma página encontraremos como instalarlo en otros sistemas operativos.
 
@@ -1018,6 +1036,8 @@ A esta configuración se le conoce como el stack TIG (Telegraf, InfluxDB y Grafa
 
 #### Configuración
 
+------------
+
 Ahora ya tenemos la base instalada para poder correr los servicios necesarios. Repasemos el montaje:
 
 **MQTT:** El dispositivo debe enviar las medidas mediante un cliente MQTT a un servidor MQTT. Por tanto, <u>debemos crear un servicio en docker</u>.  La imagen que usaremos será la *eclipse-mosquitto:latest*. A parte, debe de estar configurado tanto para recibir los datos del dispositivo como para enviarlos a la base de datos. Veamos quedaría en la configuración de docker-compose:
@@ -1043,7 +1063,7 @@ Ahora ya tenemos la base instalada para poder correr los servicios necesarios. R
 	- puerto de escucha web: 9001
 	- definimos la red para este stack
 
-**TELEGRAF:** El servidor MQTT no es capaz de transferir los datos directamente a la base de datos y necesita un servicio de escucha que los pase en el formato correcto de la base de datos elegida, en este caso, InfluxDB. El programa para traducirlo es el Telegraf. La imagen elegida es *telegraf*. Su configuración se divide en 2 partes: *docker-compose* y un fichero de configuración. 
+**TELEGRAF:** El servidor MQTT no es capaz de transferir los datos directamente a la base de datos y necesita un servicio de escucha que los pase en el formato correcto de la base de datos elegida, en este caso, InfluxDB. El programa para traducirlo es el Telegraf. La imagen elegida es *telegraf*. Su configuración se divide en 2 partes: *docker-compose* y un fichero de configuración (Telegraf sirve para recolectar información de muy diversas fuentes y consolidarlas a otras muy diversas bases de datos/componentes). 
 
 docker-compose:
 
@@ -1237,6 +1257,8 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
 
 Dejamos el fichero entero telegraf.conf en la carpeta de docker.
 
+*Info sobre la imagen https://hub.docker.com/_/telegraf*
+
 **INFLUXDB:** Esta es la parte de la base de datos. Esta debe almacenar los datos del dispositivo. En el caso de Influx se tratan como medidas o *meassures*. La parte de configuración del fichero docker-compose es esta:
 
 ```yaml
@@ -1251,6 +1273,8 @@ Dejamos el fichero entero telegraf.conf en la carpeta de docker.
         - ./tig/data/influxdb:/var/lib/influxdb
     start: always
 ```
+
+*Info sobre la imagen: https://hub.docker.com/_/influxdb*
 
 **GRAFANA:** Finalmente solo nos queda comentar la parte del servicio de grafana, donde podremos crear el dashboard con los datos que le ofrezca Influx. La parte de configuración del fichero docker-compose es esta:
 
@@ -1372,44 +1396,77 @@ Estas son las partes que intervienen y como las montamos en el fichero docker-co
 
    ![docker_compose_up](imgs/docker_compose_up.png)
 
-   En este punto ya tenemos los servicios levantados y podemos acceder a, por ejemplo grafana o InfluxDB, mediante un navegador accediendo a la IP o localhost y el puerto de cada servicio.
-   ![grafana_start](imgs/grafana_start.png)
+   A partir de aquí, ya tenemos los servicios levantados y podemos acceder a cada uno de ellos:
 
-4.  Pero si nos fijamos, aun no hemos copiado la configuración de Telegraf. En este momento hemos creado la estructura de todo el stack y docker ha podido generar las carpetas necesarias para arrancar.  Para aplicar la configuración de Telegraf debemos parar el stack y copiar el fichero a la ruta correspondiente.
+   - <u>Grafana</u>: mediante un navegador accediendo a la IP o localhost:3000.
+     ![grafana_start](imgs/grafana_start.png)
 
-   - Revisamos donde se ha creado el volumen de Telegraf:
-
-     ```bash
-     docker volume list
-     docker volume inspect <nombre_del_volumen_listado>
-     ```
-
-     ![docker-volume-inspect](imgs/docker-volume-inspect.png)
-     Como podemos observar en la imagen, la ruta del volumen de telegraf es:
-
-     */var/lib/docker/volumes/dc_tig_telegraf_volume/_data*
-
-   - Paramos los servicios y copiamos el fichero telegraf.conf (lo hemos copiado antes en la carpeta donde estemos): 
+   - <u>Influx</u>: mediante el acceso directo al docker en cuestión arrancando el cliente de influx:
 
      ```bash
-     docker-compose down
-     cp telegraf.conf /var/lib/docker/volumes/dc_tig_telegraf_volume/_data/.
+     docker exec -it influxdb influx
      ```
 
-   - Arrancamos de nuevo los servicios
+     ![influx_show_databases](imgs/influx_show_databases.png)
+
+     Usando el comando show databases; podemos observar que ya se ha creado la base de datos para telegraf.
+
+   - <u>Telegraf</u>: Este servicio es el que tiene más enjundia. No se puede configurar a priori con un volumen en la ruta que nosotros le indiquemos, porque falla. Así que hay que levantarlo tal y como hemos indicado antes y cambiarlo ahora. Así como se encuentra configurado ahora, la capeta de configuración de Telegraf, aunque accesible (mediante el acceso al volumen creado) es algo más tediosa. Se puede hacer y no da ningún problema, pero es más laborioso. 
+  Para hacerlos más accesible, he optado por:
+   
+     - parar de nuevo el docker-compose:
+   
+    ```bash
+       docker-compose down
+       ```
+
+       
+
+     - modificar la linea del volumen de *docker-compose.yml* que hace referencia al volumen y ponerle ahora la ruta donde quiero que esté.
+   
+     ```yaml
+    telegraf:
+         container_name: telegraf
+         image: telegraf
+         networks:
+           - tig_net    
+         volumes:
+           - ./tig/config/telegraf:/etc/telegraf:ro
+           - /var/run/docker.sock:/var/run/docker.sock
+         restart: always
+         depends_on:
+           - influxdb
+           - mqtt
+     ```
+   
+     - copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
+     - levantar de nuevo los servicios.
+   
+     ```bash
      docker-compose up -d
+     ```
+   
+     Para saber si Telegraf se ha levantado correctamente, interrogaremos al log del mismo servicio, tal y como indican en la [documentación](https://hub.docker.com/_/telegraf) 
+   
+     ```bash
+     docker logs -f telegraf
+     ```
+   
+     ![telegraf_log](imgs/telegraf_log.png)
+   
+   - <u>MQTT</u>: podremos ver que el servicio de MQTT está levantado usando un cliente o tal y como hemos hecho anteriormente, revisando los logs del propio contenedor.
+   
+     ```bash
+     docker logs -f mqtt
+     ```
+   
+     ![mqtt_log](imgs/mqtt_log.png)
 
-5. Copiamos el fichero telegraf.conf del github a la  carpeta /var/snap/docker/common/var-lib-
-
-   ```bash
-   docker/volumes/dc_tig_volume/_data
-   ```
-
-   > Nota: Quiero hacer notar que esta no es la manera que me parezca mejor, ya que nos obliga a no controlar donde se crea el volumen de Telegraf, pero debo decir que no he conseguido que se guarde donde quiero, con lo cual al final he decidido hacerlo así. Reconozco que mi interés sería que quedase debajo de la carpeta dc_tig/telegraf, pero no lo he logrado. Hay que revisar este punto por si se puede mejorar.
 
 
+#### Puesta en marcha
 
-#### Setup de todo el sistema
+----------
 
 Ahora queda:
 
