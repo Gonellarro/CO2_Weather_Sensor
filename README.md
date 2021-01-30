@@ -36,7 +36,7 @@ El proyecto tiene una segunda parte, más elaborada y compleja, que pretende rea
 
 
 
-## Dispositivo básico
+## Dispositivo
 
 El dispositivo básico registrará los datos de CO2, temperatura y humedad de los sensores que incorpora.  Una vez montado el circuito, cargado el programa al Wemos y dado corriente, este empezará con un proceso de precalentado (3 minutos en los que los 3 leds parpadearán de forma secuencial) y se encenderá el led que corresponda al nivel de CO2.
 
@@ -899,7 +899,7 @@ El dispositivo montado
 
 --------
 
-## Dispositivo avanzado
+## Monitorización
 
 
 
