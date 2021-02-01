@@ -1101,9 +1101,9 @@ Fichero de configuración: Este fichero hay que crearlo y guardarlo en la ubicac
 #
 #   ## Topics that will be subscribed to.
    topics = [
-     #"telegraf/host01/cpu",
-     #"telegraf/+/mem",
-     "sensors/#",
+     "telegraf/host01/cpu",
+     "telegraf/+/mem",
+     "sensors/#"
    ]
 #
 #   ## The message topic will be stored in a tag specified by this value.  If set
