@@ -1411,7 +1411,6 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
        
    networks:
        tig_net:
-          name: tig_net
    
    volumes:
        grafana_volume:
