@@ -1453,15 +1453,15 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
 
    - **Telegraf**: Este servicio tiene un poco más de misterio. Al levantarlo así, que es tal y como se recomienda en la documentación, no encuentra el fichero de configuración, con lo cual, hay que pararlo, copiarlo y volverlo a levantar:
      
-- parar de nuevo el docker-compose:
+     - parar de nuevo el docker-compose:
      
-  ```bash
-  docker-compose down
-  ```
+     ```bash
+     docker-compose down
+     ```
      
-- copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
+     - copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
      
-- levantar de nuevo los servicios.
+     - levantar de nuevo los servicios.
      
      ```bash
      docker-compose up -d
