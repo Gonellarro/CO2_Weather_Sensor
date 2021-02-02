@@ -1457,7 +1457,7 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
      
   ```bash
        docker-compose down
-       ```
+  ```
      
 - copiar el fichero telegraf.conf con la configuración que queremos a la carpeta */home/user/docker/dc_tig/tig/data/config/telegraf.conf* 
      
@@ -1479,7 +1479,7 @@ Estas son las partes que intervienen y como las definimos en el fichero docker-c
 
      ```bash
      docker logs -f mqtt
-  ```
+     ```
    
      ![mqtt_log](imgs/mqtt_log.png)
 
